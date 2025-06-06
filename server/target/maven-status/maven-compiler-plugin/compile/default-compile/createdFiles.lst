@@ -1,0 +1,3 @@
+org\example\ResourceController.class
+org\example\model\Platform.class
+org\example\filters\CorsFilter.class
