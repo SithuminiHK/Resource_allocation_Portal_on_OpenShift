@@ -82,44 +82,44 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set app name
-      run: echo "APP_NAME=resource-allocation-portal" >> $GITHUB_ENV
+      run: echo "APP_NAME=Resource Allocation Portal" >> $GITHUB_ENV
 
     - name: Build Frontend image
       uses: redhat-actions/buildah-build@v2
       with:
-        image: ${{ env.APP_NAME }}-frontend
+        image: ${{ env.APP_NAME }}-client 
         tags: latest
         dockerfiles: ./client/Dockerfile
         context: ./client
-
+    
     - name: Push Frontend image
       uses: redhat-actions/push-to-registry@v2
-      id: push-frontend
+      id: push-client
       with:
-        image: ${{ env.APP_NAME }}-frontend
+        image: ${{ env.APP_NAME }}-client
         tags: latest
         registry: ghcr.io/${{ github.repository_owner }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
+    
     - name: Build Backend image
       uses: redhat-actions/buildah-build@v2
       with:
-        image: ${{ env.APP_NAME }}-backend
+        image: ${{ env.APP_NAME }}-server
         tags: latest
         dockerfiles: ./server/Dockerfile
         context: ./server
-
+    
     - name: Push Backend image
       uses: redhat-actions/push-to-registry@v2
-      id: push-backend
+      id: push-server
       with:
-        image: ${{ env.APP_NAME }}-backend
+        image: ${{ env.APP_NAME }}-server
         tags: latest
         registry: ghcr.io/${{ github.repository_owner }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
+    
     - name: Install oc
       uses: redhat-actions/openshift-tools-installer@v1
       with:
@@ -151,21 +151,21 @@ jobs:
                 app: ${{ env.APP_NAME }}
             spec:
               containers:
-                - name: frontend
-                  image: ghcr.io/${{ github.repository_owner }}/${{ env.APP_NAME }}-frontend:latest
+                - name: client
+                  image: ghcr.io/${{ github.repository_owner }}/${{ env.APP_NAME }}-client:latest
                   ports:
                     - containerPort: 80
-                - name: backend
-                  image: ghcr.io/${{ github.repository_owner }}/${{ env.APP_NAME }}-backend:latest
+                - name: server
+                  image: ghcr.io/${{ github.repository_owner }}/${{ env.APP_NAME }}-server:latest
                   ports:
                     - containerPort: 8080
         EOF
 
     - name: Expose frontend service
       run: |
-        oc expose deployment ${{ env.APP_NAME }} --name=${{ env.APP_NAME }}-frontend-service --port=80
+        oc expose deployment ${{ env.APP_NAME }} --name=${{ env.APP_NAME }}-client-service --port=80
 
     - name: Print Route URL
       run: |
         echo "App Route:"
-        oc get route ${{ env.APP_NAME }}-frontend-service -o jsonpath='{.spec.host}'
+        oc get route ${{ env.APP_NAME }}-client-service -o jsonpath='{.spec.host}'
