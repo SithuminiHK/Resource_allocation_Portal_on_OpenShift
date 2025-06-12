@@ -84,6 +84,10 @@ jobs:
     - name: Set app name
       run: echo "APP_NAME=resource-allocation-portal" >> $GITHUB_ENV
 
+    - name: Set lowercase repo owner
+      id: lcowner
+      run: echo "REPO_OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
     - name: Build Frontend image
       uses: redhat-actions/buildah-build@v2
       with:
@@ -94,11 +98,11 @@ jobs:
     
     - name: Push Frontend image
       uses: redhat-actions/push-to-registry@v2
-      id: push-client
+      id: push-frontend
       with:
         image: ${{ env.APP_NAME }}-client
         tags: latest
-        registry: docker://ghcr.io/${{ github.repository_owner || toLower }}
+        registry: docker://ghcr.io/${{ env.REPO_OWNER_LC }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
@@ -116,7 +120,7 @@ jobs:
       with:
         image: ${{ env.APP_NAME }}-server
         tags: latest
-        registry: docker://ghcr.io/${{ github.repository_owner || toLower }}
+        registry: docker://ghcr.io/${{ env.REPO_OWNER_LC }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
