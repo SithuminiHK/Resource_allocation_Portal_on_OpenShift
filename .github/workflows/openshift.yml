@@ -36,7 +36,7 @@ env:
   OPENSHIFT_NAMESPACE: ""
 
   # 🖊️ EDIT to set a name for your OpenShift app, or a default one will be generated below.
-  APP_NAME: "Resource Allocation Portal"
+  APP_NAME: "resource-allocation-portal"
 
   # 🖊️ EDIT with the port your application should be accessible on.
   # If the container image exposes *exactly one* port, this can be left blank.
@@ -82,7 +82,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set app name
-      run: echo "APP_NAME=Resource Allocation Portal" >> $GITHUB_ENV
+      run: echo "APP_NAME=resource-allocation-portal" >> $GITHUB_ENV
 
     - name: Build Frontend image
       uses: redhat-actions/buildah-build@v2
