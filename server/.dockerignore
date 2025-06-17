@@ -1,0 +1,29 @@
+# Build outputs
+target
+*.jar
+
+# IDE/editor files
+.vscode
+.idea
+*.iml
+
+# Git & version control
+.git
+.gitignore
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Env/config files
+.env
+*.swp
+*.swo
+
+# Dockerfiles and metadata
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+.vite
+Dockerfile
+.dockerignore
+.git
+.gitignore
+npm-debug.log
+.env
+*.log
+*.md
+*.tsbuildinfo
+*.swp
+*.swo
+*.DS_Store
