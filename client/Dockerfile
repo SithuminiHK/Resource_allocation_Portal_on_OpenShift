@@ -1,21 +1,23 @@
-# Start from Node image
-FROM node:18
+# Stage 1: Build the Vite app
+FROM node:18 AS builder
 
-# Set working directory
 WORKDIR /app
-
-# Copy dependencies first to leverage Docker cache
 COPY package*.json ./
 RUN npm install
-
-# Now copy the rest of the files
 COPY . .
-
-# Then build
 RUN npm run build
 
-# Expose if needed
-EXPOSE 5173
+# Stage 2: Serve with nginx
+FROM nginx:alpine
 
-# Optional: specify CMD or ENTRYPOINT
-CMD ["npm", "run", "dev"]
+# Remove default nginx static files
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy the built app to nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80 (nginx default)
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
