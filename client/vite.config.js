@@ -7,4 +7,8 @@ export default defineConfig({
   plugins: [react(),
     tailwindcss(),
   ],
+  build: {
+    outDir: 'dist', // Ensure this is set
+    emptyOutDir: true // Clears the dist folder before build
+  }
 })

@@ -1,23 +1,30 @@
 # Stage 1: Build the Vite app
 FROM node:18 AS builder
-
-WORKDIR /app
+WORKDIR /app  
+# This creates /app directory in container (doesn't need to exist locally)
 COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
 
 # Stage 2: Serve with nginx
-FROM nginx:alpine
+FROM nginx:1.25-alpine
 
-# Remove default nginx static files
-RUN rm -rf /usr/share/nginx/html/*
+# Install libcap for setcap
+RUN apk add --no-cache libcap
 
-# Copy the built app to nginx
+# Remove default config and copy custom one
+RUN rm -rf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/
+
+# Copy built files - adjusted path since your dist is at root
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80 (nginx default)
-EXPOSE 80
+# OpenShift compatibility adjustments
+RUN chmod -R a+rwx /var/cache/nginx /var/run && \
+    chown -R nginx:root /usr/share/nginx/html && \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx
 
-# Start nginx
+USER nginx
+EXPOSE 5050
 CMD ["nginx", "-g", "daemon off;"]
