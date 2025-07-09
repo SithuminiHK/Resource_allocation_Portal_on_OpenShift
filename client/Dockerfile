@@ -13,14 +13,16 @@ FROM nginx:1.25-alpine
 # Install libcap for setcap
 RUN apk add --no-cache libcap
 
-# Remove default config and copy custom one
-RUN rm -rf /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/conf.d/
+# Copy only the server config (recommended approach)
+COPY nginx-app.conf /etc/nginx/conf.d/default.conf
 
-# Copy built files - adjusted path since your dist is at root
+# Alternative: If you need custom main config, uncomment:
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# OpenShift compatibility adjustments
+# OpenShift adjustments
 RUN chmod -R a+rwx /var/cache/nginx /var/run && \
     chown -R nginx:root /usr/share/nginx/html && \
     setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx
