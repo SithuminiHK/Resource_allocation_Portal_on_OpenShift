@@ -22,7 +22,7 @@ export default function DashboardLayout({
         {/* Image container - added flex-col and padding */}
         <div className="mb-8 animate-pulse"> {/* Added bounce animation */}
           <img 
-            src="/public/logo.png" 
+            src="/logo.png" 
             alt="Company Logo"
             className="h-32 w-auto" // Adjust size as needed
           />
