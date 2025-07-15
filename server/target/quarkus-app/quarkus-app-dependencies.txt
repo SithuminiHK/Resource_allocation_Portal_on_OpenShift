@@ -1,6 +1,11 @@
 com.aayushatharva.brotli4j:brotli4j::jar:1.16.0
 com.aayushatharva.brotli4j:service::jar:1.16.0
+com.fasterxml.jackson.core:jackson-annotations::jar:2.17.1
 com.fasterxml.jackson.core:jackson-core::jar:2.17.1
+com.fasterxml.jackson.core:jackson-databind::jar:2.17.1
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8::jar:2.17.1
+com.fasterxml.jackson.datatype:jackson-datatype-jsr310::jar:2.17.1
+com.fasterxml.jackson.module:jackson-module-parameter-names::jar:2.17.1
 com.fasterxml:classmate::jar:1.7.0
 com.github.ben-manes.caffeine:caffeine::jar:3.1.5
 com.google.errorprone:error_prone_annotations::jar:2.27.1
@@ -26,6 +31,7 @@ io.netty:netty-transport::jar:4.1.108.Final
 io.quarkus.arc:arc::jar:3.11.1
 io.quarkus.resteasy.reactive:resteasy-reactive-common-types::jar:3.11.1
 io.quarkus.resteasy.reactive:resteasy-reactive-common::jar:3.11.1
+io.quarkus.resteasy.reactive:resteasy-reactive-jackson::jar:3.11.1
 io.quarkus.resteasy.reactive:resteasy-reactive-vertx::jar:3.11.1
 io.quarkus.resteasy.reactive:resteasy-reactive::jar:3.11.1
 io.quarkus.security:quarkus-security::jar:2.0.3.Final
@@ -43,6 +49,7 @@ io.quarkus:quarkus-fs-util::jar:0.0.10
 io.quarkus:quarkus-hibernate-orm-panache-common::jar:3.11.1
 io.quarkus:quarkus-hibernate-orm-panache::jar:3.11.1
 io.quarkus:quarkus-hibernate-orm::jar:3.11.1
+io.quarkus:quarkus-jackson::jar:3.11.1
 io.quarkus:quarkus-jdbc-postgresql::jar:3.11.1
 io.quarkus:quarkus-jsonp::jar:3.11.1
 io.quarkus:quarkus-mutiny::jar:3.11.1
@@ -53,6 +60,8 @@ io.quarkus:quarkus-oidc::jar:3.11.1
 io.quarkus:quarkus-panache-common::jar:3.11.1
 io.quarkus:quarkus-panache-hibernate-common::jar:3.11.1
 io.quarkus:quarkus-rest-common::jar:3.11.1
+io.quarkus:quarkus-rest-jackson-common::jar:3.11.1
+io.quarkus:quarkus-rest-jackson::jar:3.11.1
 io.quarkus:quarkus-rest::jar:3.11.1
 io.quarkus:quarkus-security-runtime-spi::jar:3.11.1
 io.quarkus:quarkus-security::jar:3.11.1

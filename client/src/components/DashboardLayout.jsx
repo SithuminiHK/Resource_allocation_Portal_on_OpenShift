@@ -46,7 +46,7 @@ export default function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className>
             <img 
-              src="/public/logo.png" 
+              src="/logo.png" 
               alt="Company Logo"
               className="h-10 w-auto" //size 
             />

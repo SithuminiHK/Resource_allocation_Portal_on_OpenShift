@@ -7,9 +7,9 @@ import {
   createPlatform, 
   updatePlatform, 
   deletePlatform,
-  setupAxiosInterceptors
-} from '../utils/api';
+  } from '../utils/api';
 import { useKeycloak } from '@react-keycloak/web';
+import { setupAxiosInterceptors } from '../utils/api';
 
 export default function SuperAdminDashboard() {
   const { keycloak, initialized } = useKeycloak();
@@ -33,16 +33,21 @@ export default function SuperAdminDashboard() {
     storageUsed: ''
   });
 
-  // Initialize axios interceptors
+  // Setup Axios interceptors for authentication
   useEffect(() => {
-    setupAxiosInterceptors(keycloak);
-  }, [keycloak]);
+  if (initialized && keycloak?.token) {
+    setupAxiosInterceptors(keycloak); // ✅ inject token into all future requests
+  }
+}, [initialized, keycloak]);
 
    // Load platforms from API
   useEffect(() => {
     const fetchPlatforms = async () => {
       try {
         const data = await getPlatforms();
+        console.log("Fetched platforms:", data);
+        console.log("Type of platforms:", typeof data);
+        console.log("Is Array:", Array.isArray(data)); // 👈 log here
         setPlatforms(data);
       } catch (error) {
         console.error('Error fetching platforms:', error);
