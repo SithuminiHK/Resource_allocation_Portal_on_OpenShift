@@ -1,33 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { getPlatforms, setupAxiosInterceptors } from '../utils/api';
+import { useKeycloak } from '@react-keycloak/web';
 
 export default function ViewerDashboard() {
-  const [platforms] = useState([
-    // Sample data - in real app this would come from API
-    {
-      id: 1,
-      name: 'Production Cluster',
-      cloudType: 'VMware',
-      location: 'HQ',
-      poolTag: 'Production',
-      memoryTotal: 256,
-      memoryUsed: 128,
-      memoryPercent: '50.00',
-      vcpuTotal: 32,
-      vcpuUsed: 16,
-      vcpuPercent: '50.00',
-      storageType: 'SSD',
-      storageTotal: 2000,
-      storageUsed: 800,
-      storagePercent: '40.00'
+  const { keycloak, initialized } = useKeycloak();
+  const [platforms, setPlatforms] = useState([]);
+
+  useEffect(() => {
+    if (initialized && keycloak?.token) {
+      setupAxiosInterceptors(keycloak);
     }
-  ]);
+  }, [initialized, keycloak]);
+
+  useEffect(() => {
+    const fetchPlatforms = async () => {
+      try {
+        const data = await getPlatforms();
+        setPlatforms(data);
+      } catch (error) {
+        console.error('Error fetching platforms:', error);
+        alert('Failed to load platforms');
+      }
+    };
+    fetchPlatforms();
+  }, []);
+
+  if (!initialized) return <LoadingSpinner />;
 
   return (
-    <DashboardLayout 
-      roleName="Viewer" 
-      welcomeMessage="Welcome Viewer"
-    >
+    <DashboardLayout roleName="Viewer" welcomeMessage="Welcome Viewer">
       <h2 className="text-lg font-medium text-gray-900 mb-6">Resource Utilization</h2>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -44,56 +47,65 @@ export default function ViewerDashboard() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {platforms.map((platform) => (
-              <tr key={platform.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{platform.name}</td>
-                <td className="px-4 py-4 whitespace-nowrap">{platform.cloudType}</td>
-                <td className="px-4 py-4 whitespace-nowrap">{platform.location}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{platform.poolTag}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        parseFloat(platform.memoryPercent) > 80 ? 'bg-red-600' : 
-                        parseFloat(platform.memoryPercent) > 60 ? 'bg-amber-500' : 'bg-green-600'
-                      }`}
-                      style={{ width: `${platform.memoryPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {platform.memoryUsed}GB / {platform.memoryTotal}GB ({platform.memoryPercent}%)
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        parseFloat(platform.vcpuPercent) > 80 ? 'bg-red-600' : 
-                        parseFloat(platform.vcpuPercent) > 60 ? 'bg-amber-500' : 'bg-green-600'
-                      }`}
-                      style={{ width: `${platform.vcpuPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {platform.vcpuUsed} / {platform.vcpuTotal} ({platform.vcpuPercent}%)
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        parseFloat(platform.storagePercent) > 80 ? 'bg-red-600' : 
-                        parseFloat(platform.storagePercent) > 60 ? 'bg-amber-500' : 'bg-green-600'
-                      }`}
-                      style={{ width: `${platform.storagePercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {platform.storageType}:{platform.storageUsed}GB / {platform.storageTotal}GB ({platform.storagePercent}%)
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {platforms.map((platform) => {
+              const memoryPercent = ((platform.memoryUsed / platform.memoryTotal) * 100).toFixed(2);
+              const vcpuPercent = ((platform.vcpuUsed / platform.vcpuTotal) * 100).toFixed(2);
+              const storagePercent = ((platform.storageUsed / platform.storageTotal) * 100).toFixed(2);
+
+              return (
+                <tr key={platform.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">{platform.name}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">{platform.cloudType}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">{platform.location}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{platform.poolTag}</td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full ${
+                          memoryPercent > 80 ? 'bg-red-600' :
+                          memoryPercent > 60 ? 'bg-amber-500' : 'bg-green-600'
+                        }`}
+                        style={{ width: `${memoryPercent}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {platform.memoryUsed}GB / {platform.memoryTotal}GB ({memoryPercent}%)
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full ${
+                          vcpuPercent > 80 ? 'bg-red-600' :
+                          vcpuPercent > 60 ? 'bg-amber-500' : 'bg-green-600'
+                        }`}
+                        style={{ width: `${vcpuPercent}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {platform.vcpuUsed} / {platform.vcpuTotal} ({vcpuPercent}%)
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full ${
+                          storagePercent > 80 ? 'bg-red-600' :
+                          storagePercent > 60 ? 'bg-amber-500' : 'bg-green-600'
+                        }`}
+                        style={{ width: `${storagePercent}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {platform.storageType}:{platform.storageUsed}GB / {platform.storageTotal}GB ({storagePercent}%)
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

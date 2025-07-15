@@ -1,206 +1,74 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { getPlatforms, updatePlatform, setupAxiosInterceptors } from '../utils/api';
+import { useKeycloak } from '@react-keycloak/web';
+import EditPlatformForm from '../components/EditPlatformForm';
 
 export default function OperatorDashboard() {
+  const { keycloak, initialized } = useKeycloak();
+  const [platforms, setPlatforms] = useState([]);
   const [editingPlatform, setEditingPlatform] = useState(null);
-  const [platforms, setPlatforms] = useState([
-    // Sample data - in real app this would come from API
-    {
-      id: 1,
-      name: 'Production Cluster',
-      cloudType: 'VMware',
-      location: 'HQ',
-      poolTag: 'Production',
-      memoryTotal: 256,
-      memoryUsed: 128,
-      vcpuTotal: 32,
-      vcpuUsed: 16,
-      storageType: 'SSD',
-      storageTotal: 2000,
-      storageUsed: 800
-    }
-  ]);
 
-  const handleUpdatePlatform = (updatedPlatform) => {
-    setPlatforms(platforms.map(p => 
-      p.id === updatedPlatform.id ? updatedPlatform : p
-    ));
-    setEditingPlatform(null);
-    // Here you would call your API endpoint
+  useEffect(() => {
+    if (initialized && keycloak?.token) {
+      setupAxiosInterceptors(keycloak); // inject token into Axios
+    }
+  }, [initialized, keycloak]);
+
+  useEffect(() => {
+    const fetchPlatforms = async () => {
+      try {
+        const data = await getPlatforms();
+        setPlatforms(data);
+      } catch (error) {
+        console.error('Error fetching platforms:', error);
+        alert('Failed to load platforms');
+      }
+    };
+    fetchPlatforms();
+  }, []);
+
+  if (!initialized) {
+    return <LoadingSpinner />;
+  }
+
+  const handleUpdatePlatform = async (updatedPlatform) => {
+    try {
+      const res = await updatePlatform(updatedPlatform.id, updatedPlatform);
+      setPlatforms(platforms.map(p => p.id === res.id ? res : p));
+      setEditingPlatform(null);
+    } catch (error) {
+      console.error('Error updating platform:', error);
+      alert('Failed to update platform');
+    }
   };
 
   return (
-    <DashboardLayout 
-      roleName="Operator" 
-      welcomeMessage="Welcome Operator"
-    >
+    <DashboardLayout roleName="Operator" welcomeMessage="Welcome Operator">
       <h2 className="text-lg font-medium text-gray-900 mb-6">Resource Management</h2>
-          {editingPlatform && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-medium mb-4">Edit Platform</h3>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                handleUpdatePlatform({
-                  ...editingPlatform,
-                  memoryPercent: ((editingPlatform.memoryUsed / editingPlatform.memoryTotal) * 100).toFixed(2),
-                  vcpuPercent: ((editingPlatform.vcpuUsed / editingPlatform.vcpuTotal) * 100).toFixed(2),
-                  storagePercent: ((editingPlatform.storageUsed / editingPlatform.storageTotal) * 100).toFixed(2)
-                });
-              }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Platform Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Platform Name *</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.name}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, name: e.target.value})}
-                  required
-                />
-              </div>
 
-              {/* Cloud Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Cloud Type *</label>
-                <select
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.cloudType}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, cloudType: e.target.value})}
-                >
-                  <option value="VMware">VMware</option>
-                  <option value="Oracle">Oracle</option>
-                  <option value="Azure">Azure</option>
-                </select>
-              </div>
+      {editingPlatform && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <EditPlatformForm
+            platform={editingPlatform}
+            onSave={(updatedPlatform) => {
+              const memoryPercent = ((updatedPlatform.memoryUsed / updatedPlatform.memoryTotal) * 100).toFixed(2);
+              const vcpuPercent = ((updatedPlatform.vcpuUsed / updatedPlatform.vcpuTotal) * 100).toFixed(2);
+              const storagePercent = ((updatedPlatform.storageUsed / updatedPlatform.storageTotal) * 100).toFixed(2);
 
-              {/* Location */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Location *</label>
-                <select
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.location}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, location: e.target.value})}
-                >
-                  <option value="HQ">HQ</option>
-                  <option value="Welikada">Welikada</option>
-                  <option value="Pitipana">Pitipana</option>
-                </select>
-              </div>
-
-              {/* Memory - Total */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Memory Total (GB) *</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.memoryTotal}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, memoryTotal: e.target.value})}
-                  required
-                />
-              </div>
-
-              {/* Memory - Used */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Memory Used (GB) *</label>
-                <input
-                  type="number"
-                  min="0"
-                  max={editingPlatform.memoryTotal || ''}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.memoryUsed}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, memoryUsed: e.target.value})}
-                  required
-                />
-              </div>
-
-              {/* vCPU - Total */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">vCPU Total *</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.vcpuTotal}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, vcpuTotal: e.target.value})}
-                  required
-                />
-              </div>
-
-              {/* vCPU - Used */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">vCPU Used *</label>
-                <input
-                  type="number"
-                  min="0"
-                  max={editingPlatform.vcpuTotal || ''}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.vcpuUsed}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, vcpuUsed: e.target.value})}
-                  required
-                />
-              </div>
-
-              {/* Storage Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Storage Type *</label>
-                <select
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.storageType}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, storageType: e.target.value})}
-                >
-                  <option value="HDD">HDD</option>
-                  <option value="SSD">SSD</option>
-                </select>
-              </div>
-
-              {/* Storage - Total */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Storage Total (GB) *</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.storageTotal}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, storageTotal: e.target.value})}
-                  required
-                />
-              </div>
-
-              {/* Storage - Used */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Storage Used (GB) *</label>
-                <input
-                  type="number"
-                  min="0"
-                  max={editingPlatform.storageTotal || ''}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={editingPlatform.storageUsed}
-                  onChange={(e) => setEditingPlatform({...editingPlatform, storageUsed: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2 flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingPlatform(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </form>
+              handleUpdatePlatform({
+                ...updatedPlatform,
+                memoryPercent,
+                vcpuPercent,
+                storagePercent,
+              });
+            }}
+            onCancel={() => setEditingPlatform(null)}
+          />
         </div>
       )}
+
 
       <div className="bg-white shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
@@ -217,67 +85,61 @@ export default function OperatorDashboard() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {platforms.map((platform) => (
-              <tr key={platform.id}>
-                <td className="px-4 py-4 whitespace-nowrap">{platform.name}</td>
-                <td className="px-4 py-4 whitespace-nowrap">{platform.cloudType}</td>
-                <td className="px-4 py-4 whitespace-nowrap">{platform.location}</td>
-                <td className="px-4 py-4 whitespace-nowrap">{platform.poolTag}</td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        parseFloat(platform.memoryPercent) > 80 ? 'bg-red-600' : 
-                        parseFloat(platform.memoryPercent) > 60 ? 'bg-amber-500' : 'bg-green-600'
-                      }`}
-                      style={{ width: `${platform.memoryPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-black-500">
-                    {platform.memoryUsed}GB / {platform.memoryTotal}GB ({platform.memoryPercent}%)
-                  </span>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        parseFloat(platform.vcpuPercent) > 80 ? 'bg-red-600' : 
-                        parseFloat(platform.vcpuPercent) > 60 ? 'bg-amber-500' : 'bg-green-600'
-                      }`}
-                      style={{ width: `${platform.vcpuPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-black-500">
-                    {platform.vcpuUsed} / {platform.vcpuTotal} ({platform.vcpuPercent}%)
-                  </span>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        parseFloat(platform.storagePercent) > 80 ? 'bg-red-600' : 
-                        parseFloat(platform.storagePercent) > 60 ? 'bg-amber-500' : 'bg-green-600'
-                      }`}
-                      style={{ width: `${platform.storagePercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-black-500">
-                    {platform.storageType}:{platform.storageUsed}GB / {platform.storageTotal}GB ({platform.storagePercent}%)
-                  </span>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => setEditingPlatform(platform)}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {platforms.map(platform => {
+              const memoryPercent = ((platform.memoryUsed / platform.memoryTotal) * 100).toFixed(2);
+              const vcpuPercent = ((platform.vcpuUsed / platform.vcpuTotal) * 100).toFixed(2);
+              const storagePercent = ((platform.storageUsed / platform.storageTotal) * 100).toFixed(2);
+
+              return (
+                <tr key={platform.id}>
+                  <td className="px-4 py-4 whitespace-nowrap">{platform.name}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">{platform.cloudType}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">{platform.location}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">{platform.poolTag}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className={`h-2.5 rounded-full ${
+                        memoryPercent > 80 ? 'bg-red-600' : memoryPercent > 60 ? 'bg-amber-500' : 'bg-green-600'
+                      }`} style={{ width: `${memoryPercent}%` }}></div>
+                    </div>
+                    <span className="text-sm text-black-500">
+                      {platform.memoryUsed}GB / {platform.memoryTotal}GB ({memoryPercent}%)
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className={`h-2.5 rounded-full ${
+                        vcpuPercent > 80 ? 'bg-red-600' : vcpuPercent > 60 ? 'bg-amber-500' : 'bg-green-600'
+                      }`} style={{ width: `${vcpuPercent}%` }}></div>
+                    </div>
+                    <span className="text-sm text-black-500">
+                      {platform.vcpuUsed} / {platform.vcpuTotal} ({vcpuPercent}%)
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className={`h-2.5 rounded-full ${
+                        storagePercent > 80 ? 'bg-red-600' : storagePercent > 60 ? 'bg-amber-500' : 'bg-green-600'
+                      }`} style={{ width: `${storagePercent}%` }}></div>
+                    </div>
+                    <span className="text-sm text-black-500">
+                      {platform.storageType}:{platform.storageUsed}GB / {platform.storageTotal}GB ({storagePercent}%)
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => setEditingPlatform(platform)}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </DashboardLayout>
   );
-} 
+}
