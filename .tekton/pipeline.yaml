@@ -1,0 +1,70 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: resource-portal-pipeline
+spec:
+  params:
+    - name: CLIENT_IMAGE
+    - name: SERVER_IMAGE
+  workspaces:
+    - name: shared-workspace
+  tasks:
+
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: $(params.repo_url)
+        - name: deleteExisting
+          value: "true"
+
+    - name: build-client
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter: [clone-repo]
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: IMAGE
+          value: $(params.CLIENT_IMAGE)
+        - name: CONTEXT
+          value: client
+        - name: DOCKERFILE
+          value: client/Dockerfile
+
+    - name: build-server
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter: [clone-repo]
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: IMAGE
+          value: $(params.SERVER_IMAGE)
+        - name: CONTEXT
+          value: server
+        - name: DOCKERFILE
+          value: server/Dockerfile
+
+    - name: deploy
+      runAfter: [build-client, build-server]
+      taskSpec:
+        steps:
+          - name: kubectl-apply
+            image: bitnami/kubectl:latest
+            script: |
+              kubectl apply -f .tekton/deployment.yaml -n poc-cs-resource-utilization-portal
+        workspaces:
+          - name: source
+      workspaces:
+        - name: source
+          workspace: shared-workspace

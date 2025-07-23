@@ -1,0 +1,123 @@
+# -------------------------------
+# Deployment: Pod with two containers
+# -------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resource-portal
+  namespace: poc-cs-resource-utilization-portal
+  labels:
+    app: resource-portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resource-portal
+  template:
+    metadata:
+      labels:
+        app: resource-portal
+    spec:
+      containers:
+        - name: client
+          image: sithuminihk/client-app:v18
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: VITE_API_URL
+              value: http://resource-portal-poc-cs-resource-utilization-portal.apps.openshift-01.akaza.lk
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+        - name: server
+          image: sithuminihk/server-app:vx
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: QUARKUS_HTTP_CORS_ORIGINS
+              value: https://resource-portal-client-poc-cs-resource-utilization-portal.apps.openshift-01.akaza.lk
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: db_user
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: StrongPAssword123
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: jdbc:postgresql://postgresql:5432/resourcedb
+            - name: QUARKUS_DATASOURCE_DB_KIND
+              value: postgresql
+            - name: QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION
+              value: update
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+
+---
+
+# -------------------------------
+# Combined Service (client + server)
+# -------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: resource-portal
+  namespace: poc-cs-resource-utilization-portal
+spec:
+  selector:
+    app: resource-portal
+  ports:
+    - name: client-port
+      protocol: TCP
+      port: 80
+      targetPort: 3000
+    - name: server-port
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+
+# -------------------------------
+# Backend Route (server)
+# -------------------------------
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: resource-portal
+  namespace: poc-cs-resource-utilization-portal
+spec:
+  to:
+    kind: Service
+    name: resource-portal
+  port:
+    targetPort: server-port
+  tls:
+    termination: edge
+
+---
+
+# -------------------------------
+# Frontend Route (client)
+# -------------------------------
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: resource-portal-client
+  namespace: poc-cs-resource-utilization-portal
+spec:
+  to:
+    kind: Service
+    name: resource-portal
+  port:
+    targetPort: client-port
+  tls:
+    termination: edge
