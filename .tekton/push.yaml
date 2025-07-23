@@ -16,6 +16,8 @@ spec:
       value: image-registry.openshift-image-registry.svc:5000/poc-cs-resource-utilization-portal/client-app
     - name: SERVER_IMAGE
       value: image-registry.openshift-image-registry.svc:5000/poc-cs-resource-utilization-portal/server-app
+    - name: repo_url
+      value: '{{ repo_url }}'
   workspaces:
     - name: shared-workspace
       volumeClaimTemplate:
