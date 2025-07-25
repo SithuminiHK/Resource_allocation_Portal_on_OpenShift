@@ -6,6 +6,7 @@ spec:
   params:
     - name: CLIENT_IMAGE
     - name: SERVER_IMAGE
+    - name: repo_url 
   workspaces:
     - name: shared-workspace
   tasks:
