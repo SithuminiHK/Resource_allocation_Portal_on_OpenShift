@@ -124,12 +124,19 @@ docker build -t sithuminihk/server-app:vx .
 - Secrets for DB and Keycloak should be configured in OpenShift in advance
 
 ---
+### ⚙️ 6. CI/CD via Tekton Pipelines
 
-### ⚙️ 6. CI/CD via Tekton
+- **Pipeline Definition:**  
+  `.tekton/pipeline.yaml` – Contains the Tekton tasks and steps:
+  - Build frontend and backend containers using **Buildah**
+  - Tag and push images to the container registry
+  - Apply OpenShift deployment (`deployment.yaml`)
 
-- File: `.tekton/push.yaml`
-- Automatically builds and deploys on push
-- Uses `Buildah` to build images securely in OpenShift
+- **Trigger Config (Pipelines-as-Code):**  
+  `.tekton/push.yaml` – Triggers the pipeline automatically on Git push (e.g., to `main` or a PR)
+
+- **Security:**  
+  Uses **Buildah** for non-root, secure image builds inside OpenShift
 
 ---
 
@@ -137,42 +144,31 @@ docker build -t sithuminihk/server-app:vx .
 
 | Container   | Variable             		 	     | Description                      |
 |-----------|------------------------------ |----------------------------------|
-| Server        | `QUARKUS_DATASOURCE_JDBC_URL`               | JDBC URL to connect to PostgreSQL             |
-| Server        | `QUARKUS_DATASOURCE_USERNAME`               | DB username                                   |
-| Server        | `QUARKUS_DATASOURCE_PASSWORD`               | DB password                                   |
-| Server        | `QUARKUS_DATASOURCE_DB_KIND`                | Database type (`postgresql`)                  |
-| Server        | `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION` | Schema gen strategy (e.g., `drop-and-create`) |
-| Server        | `QUARKUS_HTTP_CORS_ORIGINS`                 | Allowed CORS origins                          |
-
-
-| Backend   | `QUARKUS_DATASOURCE_URL`     | PostgreSQL DB URL             |
-| Backend   | `KEYCLOAK_URL`                           | Keycloak auth server URL         |
-| Backend   | `KEYCLOAK_REALM`                      | Realm name                       |
-| Backend   | `KEYCLOAK_CLIENT_ID`                 | Client ID for Quarkus            |
-| Frontend  | `VITE_APP_URL`                             | Client ID for Quarkus            |
-| Frontend  | `VITE_KEYCLOAK_URL`                   | Keycloak auth server URL         |
-| Frontend  | `VITE_CLIENT_ID`                            | Client ID                        |
-| Frontend  | `VITE_REALM`                                 | Realm                            |
-
----
-
-## 📝 Known Issues / To-Do
-
-- [ ] Improve error handling on unauthorized routes
-- [ ] Implement platform delete confirmation modal
-- [ ] Add loading state indicators
-- [ ] Refactor repetitive form components
+| Backend-Quarkus| `QUARKUS_DATASOURCE_JDBC_URL`               | JDBC URL to connect to PostgreSQL             |
+| Backend-Quarkus| `QUARKUS_DATASOURCE_USERNAME`               | DB username                                   |
+| Backend-Quarkus| `QUARKUS_DATASOURCE_PASSWORD`               | DB password                                   |
+| Backend-Quarkus| `QUARKUS_DATASOURCE_DB_KIND`                | Database type (`postgresql`)                  |
+| Backend-Quarkus| `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION` | Schema gen strategy (e.g., `drop-and-create`) |
+| Backend-Quarkus| `QUARKUS_HTTP_CORS_ORIGINS`                 | Allowed CORS origins                          |
+| Keycloak| Frontend-React+Vite| `VITE_API_URL` | Backend API base URL |
+| Keycloak| `KC_DB`                   | Database type (e.g., `postgres`)  |
+| Keycloak| `KC_DB_URL`               | JDBC connection string            |
+| Keycloak| `KC_DB_USERNAME`          | PostgreSQL username               |
+| Keycloak| `KC_DB_PASSWORD`          | PostgreSQL password               |
+| Keycloak| `KEYCLOAK_ADMIN`          | Initial admin username            |
+| Keycloak| `KEYCLOAK_ADMIN_PASSWORD` | Initial admin password            |
+| Keycloak| `KC_PROXY`                | Proxy setting (e.g., `edge`)      |
+| Keycloak| `KC_HOSTNAME`             | External hostname (used for URLs) |
 
 ---
-
 ## 🙌 Acknowledgements
 
-Developed during internship at **[Organization Name]**, under the guidance of [Supervisor Name] and the [DevOps / Cloud] team.
+Developed during internship at Sri Lanka Telecom PLC, under the guidance of Eng.Sarin Sirimalwatta, Eng.Janagan Balasubramaniam and the Cloud Services Development team.
 
 ---
 
 ## 📬 Contact
 
 **Sithumini Hansika**  
-Email: [your-email@example.com]  
+Email: kamalasirisithumini@gmail.com
 GitHub: [github.com/sithuminihk](https://github.com/sithuminihk)
