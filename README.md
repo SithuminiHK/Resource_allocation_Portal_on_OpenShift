@@ -150,7 +150,7 @@ docker build -t sithuminihk/server-app:vx .
 | Backend-Quarkus| `QUARKUS_DATASOURCE_DB_KIND`                | Database type (`postgresql`)                  |
 | Backend-Quarkus| `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION` | Schema gen strategy (e.g., `drop-and-create`) |
 | Backend-Quarkus| `QUARKUS_HTTP_CORS_ORIGINS`                 | Allowed CORS origins                          |
-| Keycloak| Frontend-React+Vite| `VITE_API_URL` | Backend API base URL |
+|Frontend-React+Vite| `VITE_API_URL` | Backend API base URL |
 | Keycloak| `KC_DB`                   | Database type (e.g., `postgres`)  |
 | Keycloak| `KC_DB_URL`               | JDBC connection string            |
 | Keycloak| `KC_DB_USERNAME`          | PostgreSQL username               |
